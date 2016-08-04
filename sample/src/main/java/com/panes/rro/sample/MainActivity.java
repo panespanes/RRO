@@ -13,27 +13,22 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 
 import com.panes.rro.RROService;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-
+    TextView tv = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        tv = (TextView)findViewById(R.id.tv);
+        Log.i("RRO", "v2 = "+tv.toString());
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -84,7 +79,19 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_camera) {
-            new RROService().get();
+            tv.setText("");
+            Snackbar.make(findViewById(R.id.fab), "RRO requesting ...", Snackbar.LENGTH_LONG).setAction("delete", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d("RRO", "fab delete");
+                }
+            }).show();
+            new RROService().get(new RROService.IOnResult() {
+                @Override
+                public void onReceive(String msg) {
+                    tv.setText(tv.getText()+"\n"+msg);
+                }
+            });
             Log.d("RRO", "executed");
         } else if (id == R.id.nav_gallery) {
 
