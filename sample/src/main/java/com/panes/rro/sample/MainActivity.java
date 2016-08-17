@@ -22,20 +22,25 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.http.GET;
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     public static String API_URL = "https://api.github.com";
 
     TextView tv = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        tv = (TextView)findViewById(R.id.tv);
-        Log.i("RRO", "v2 = "+tv.toString());
+        tv = (TextView) findViewById(R.id.tv);
+        Log.i("RRO", "v2 = " + tv.toString());
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -66,6 +71,7 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_camera) {
+            // 不通过RxJava直接得到回调
             tv.setText("");
             Snackbar.make(findViewById(R.id.fab), "RRO requesting ...", Snackbar.LENGTH_LONG).setAction("delete", new View.OnClickListener() {
                 @Override
@@ -73,15 +79,13 @@ public class MainActivity extends AppCompatActivity
                     Log.d("RRO", "fab delete");
                 }
             }).show();
-            request(new IOnResult() {
-                @Override
-                public void onReceive(String msg) {
-                    tv.setText(tv.getText()+"\n"+msg);
-                }
-            });
+            request();
             Log.d("RRO", "executed");
         } else if (id == R.id.nav_gallery) {
-
+            // 观察者得到回调
+            tv.setText("");
+            Snackbar.make(findViewById(R.id.fab), "Rx requesting...", Snackbar.LENGTH_LONG).show();
+            rxRequest();
         } else if (id == R.id.nav_slideshow) {
 
         } else if (id == R.id.nav_manage) {
@@ -97,25 +101,24 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    private void changeTxt(HashMap<String, String> hashMap) {
+        StringBuilder sb;
+        for (String key : hashMap.keySet()) {
+            sb = new StringBuilder(key + hashMap.get(key));
+            System.out.println(key + hashMap.get(key));
+            Log.d("RRO", sb.toString());
+            tv.setText(tv.getText() + "\n" + sb.toString());
+        }
+    }
 
-
-
-    public void request(final IOnResult onResult) {
+    public void request() {
         GitHub github = RRO.getApiService(GitHub.class, API_URL);
 
         Call<HashMap<String, String>> call = github.index();
         call.enqueue(new Callback<HashMap<String, String>>() {
             @Override
             public void onResponse(Call<HashMap<String, String>> call, Response<HashMap<String, String>> response) {
-                StringBuilder sb;
-                HashMap<String, String> hashMap = response.body();
-                for (String key : hashMap.keySet()) {
-                    sb = new StringBuilder(key + hashMap.get(key));
-                    System.out.println(key + hashMap.get(key));
-                    Log.d("RRO", sb.toString());
-                    onResult.onReceive(sb.toString());
-                }
-
+                changeTxt(response.body());
                 Log.d("RRO", "onresponse");
             }
 
@@ -132,7 +135,31 @@ public class MainActivity extends AppCompatActivity
         Call<HashMap<String, String>> index();
     }
 
-    public interface IOnResult {
-        void onReceive(String msg);
+    public interface RxGitHub {
+        @GET("/")
+        Observable<HashMap<String, String>> index();
+    }
+
+    private void rxRequest() {
+        RRO.setApiUrl(API_URL);
+        RxGitHub apiService = RRO.getApiService(RxGitHub.class);
+        apiService.index().subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<HashMap<String, String>>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onNext(HashMap<String, String> stringStringHashMap) {
+                        changeTxt(stringStringHashMap);
+                    }
+                });
     }
 }
