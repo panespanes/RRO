@@ -5,7 +5,7 @@ RRO = Retrofit+RxJava+Okhttp3<br>
 实现了使用FastJson的RetrofitConverter, 比GSON解析速度更快.<br>
 保留Retrofit简洁的调用方式, 同时去掉过多繁琐的配置, 快速上手.<br>
 
-# 快速使用(不配置RxJava)
+# 快速使用
 ```java
  public static String API_URL = "https://api.github.com"; //定义一个请求地址
  
