@@ -1,7 +1,4 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
-
-group='com.github.panespanes'
 android {
     compileSdkVersion 24
     buildToolsVersion "24.0.0"
