@@ -62,3 +62,20 @@ apiService.index()
               }
            });
  ```
+最后,  
+
+在project的build.gradle定义maven地址
+```java
+allprojects {
+    repositories {
+        ...
+        maven { url "https://jitpack.io" }
+    }
+}
+```
+在module中添加引用
+```java
+dependencies {
+    compile 'com.github.panespanes:RRO:44890e7717'
+}
+```
